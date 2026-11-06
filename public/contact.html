@@ -42,10 +42,8 @@
     .privacy { max-width: 230px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
     .button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; padding: 0 18px; border: 0; background: var(--lime); color: var(--ink); font: 700 11px var(--body); text-transform: uppercase; cursor: pointer; }
     .button:hover { background: var(--ink); color: var(--lime); }
-    .button:disabled { opacity: .65; cursor: wait; }
     .status { min-height: 22px; margin: 14px 0 0; font-size: 12px; line-height: 1.6; }
-    .status[data-state="error"] { color: #a52c1e; }
-    .status[data-state="success"] { color: #286332; }
+    .email-link { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
     footer { padding-block: 18px; background: var(--ink); color: #aaa; font-size: 10px; }
     .footer-inner { display: flex; justify-content: space-between; gap: 18px; }
     @media (max-width: 700px) { .wrap { width: min(100% - 36px, 560px); } main { grid-template-columns: 1fr; padding-block: 24px; } .intro { padding: 34px 26px; } .intro-copy { margin-top: 18px; } .aside-note { margin-top: 22px; } .form-panel { padding: 30px 24px; border-top: 0; border-left: 1px solid var(--line); } }
@@ -62,8 +60,8 @@
     <section class="intro" aria-labelledby="page-title">
       <p class="eyebrow">Your car, your question</p>
       <h1 id="page-title">Let's talk<br><span>cars.</span></h1>
-      <p class="intro-copy">Tell us what you're driving and what you have in mind. We’ll get back to you as soon as we can.</p>
-      <p class="aside-note">Servicing, repairs, performance upgrades, project ideas. Start wherever you are.</p>
+      <p class="intro-copy">Tell us what you're driving and what you have in mind. Your email app will open with the enquiry ready for you to review and send.</p>
+      <p class="aside-note">Prefer to write your own message? Email us at <a class="email-link" href="mailto:sharino@dyrland.com">sharino@dyrland.com</a>.</p>
     </section>
     <section class="form-panel" aria-labelledby="form-title">
       <h2 id="form-title">Send an enquiry</h2>
@@ -72,10 +70,9 @@
           <label for="name">Your name <span aria-hidden="true">*</span><input id="name" name="name" autocomplete="name" minlength="2" maxlength="100" required></label>
           <label for="email">Email address <span aria-hidden="true">*</span><input id="email" name="email" type="email" autocomplete="email" maxlength="254" required></label>
           <label for="vehicle">Your car<input id="vehicle" name="vehicle" autocomplete="off" maxlength="120" placeholder="Make, model and year"></label>
-          <label class="trap" aria-hidden="true" for="company">Company<input id="company" name="company" tabindex="-1" autocomplete="off"></label>
         </div>
-        <label class="message-field" for="message">How can we help? <span aria-hidden="true">*</span><textarea id="message" name="message" minlength="10" maxlength="5000" required></textarea></label>
-        <div class="form-bottom"><p class="privacy">Your details will only be used to reply to this enquiry.</p><button class="button" type="submit">Send enquiry <span aria-hidden="true">&#8594;</span></button></div>
+        <label class="message-field" for="message">How can we help? <span aria-hidden="true">*</span><textarea id="message" name="message" minlength="10" maxlength="1000" required></textarea></label>
+        <div class="form-bottom"><p class="privacy">This opens your email app. Review and send your enquiry there.</p><button class="button" type="submit">Open email app <span aria-hidden="true">&#8594;</span></button></div>
         <p class="status" id="form-status" role="status" aria-live="polite"></p>
       </form>
     </section>
@@ -84,34 +81,23 @@
   <script>
     const form = document.querySelector('#contact-form');
     const status = document.querySelector('#form-status');
-    const submitButton = form.querySelector('button[type="submit"]');
-
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
 
-      status.textContent = 'Sending your enquiry...';
-      status.dataset.state = '';
-      submitButton.disabled = true;
-
       const values = Object.fromEntries(new FormData(form));
-      try {
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(values),
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Please try again later.');
-        form.reset();
-        status.textContent = 'Thanks. Your enquiry has been sent.';
-        status.dataset.state = 'success';
-      } catch (error) {
-        status.textContent = error.message || 'We could not send your enquiry. Please try again later.';
-        status.dataset.state = 'error';
-      } finally {
-        submitButton.disabled = false;
-      }
+      const subject = `Sharinos enquiry from ${values.name}`;
+      const body = [
+        `Name: ${values.name}`,
+        `Email: ${values.email}`,
+        `Vehicle: ${values.vehicle || 'Not provided'}`,
+        '',
+        values.message,
+      ].join('\n');
+      const mailto = `mailto:sharino@dyrland.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      status.textContent = 'Your email app should open with the enquiry ready. Please send it from there.';
+      window.location.href = mailto;
     });
   </script>
 </body>
