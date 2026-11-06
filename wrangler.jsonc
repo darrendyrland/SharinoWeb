@@ -1,8 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sharinos",
+  "main": "./worker.js",
+  "workers_dev": true,
   "compatibility_date": "2026-11-06",
   "assets": {
-    "directory": "./public"
-  }
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "send_email": [
+    {
+      "name": "OUTBOUND_EMAIL"
+    }
+  ]
 }
